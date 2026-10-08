@@ -22,7 +22,52 @@ export async function callGemini(opts: {
   temperature?: number | undefined;
 }): Promise<string> {
   const key = process.env['GEMINI_API_KEY'];
+  if (!key) return callGateway(opts);
+  try {
+    return await callGeminiDirect(opts, key);
+  } catch (e) {
+    // Rejected/revoked key → fall back to Gemini via the built-in AI gateway.
+    if (e instanceof GeminiError && (e.status === 401 || e.status === 403)) return callGateway(opts);
+    throw e;
+  }
+}
+
+async function callGateway(opts: { system: string; contents: GeminiContent[]; json?: boolean }): Promise<string> {
+  const key = process.env['LOVABLE_API_KEY'];
   if (!key) throw new GeminiError("AI is not configured on the server.", 500);
+  const messages = [
+    { role: "system", content: opts.system + (opts.json ? " Output valid JSON only." : "") },
+    ...opts.contents.map((c) => ({ role: c.role === "model" ? "assistant" : "user", content: c.parts.map((p) => p.text).join("") })),
+  ];
+  for (let attempt = 0; attempt < 3; attempt++) {
+    let res: Response;
+    try {
+      res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "X-Lovable-AIG-SDK": "fetch" },
+        body: JSON.stringify({ model: "google/gemini-3-flash-preview", messages, ...(opts.json ? { response_format: { type: "json_object" } } : {}) }),
+      });
+    } catch {
+      await sleep(600 * (attempt + 1));
+      continue;
+    }
+    if (res.ok) {
+      const j = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+      const text = j.choices?.[0]?.message?.content ?? "";
+      if (!text.trim()) throw new GeminiError("The AI returned an empty response. Please try again.", 502);
+      return text;
+    }
+    if (res.status === 402) throw new GeminiError("AI credits are exhausted for this workspace.", 402);
+    if (res.status === 429 || res.status >= 500) { await sleep(800 * 2 ** attempt); continue; }
+    throw new GeminiError("The AI could not process this request.", res.status);
+  }
+  throw new GeminiError("The AI service is temporarily unavailable.", 503);
+}
+
+async function callGeminiDirect(
+  opts: { system: string; contents: GeminiContent[]; json?: boolean; temperature?: number | undefined },
+  key: string,
+): Promise<string> {
 
   const body = {
     systemInstruction: { parts: [{ text: opts.system }] },
