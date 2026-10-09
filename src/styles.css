@@ -116,7 +116,7 @@
   }
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
   }
 }
 
@@ -174,7 +174,7 @@
   .label-mono {
     font-family: var(--font-mono);
     font-size: 0.7rem;
-    letter-spacing: 0.14em;
+    letter-spacing: 0;
     text-transform: uppercase;
     color: var(--muted-foreground);
   }
@@ -194,5 +194,5 @@
 @utility animate-spin-slow { animation: spin-slow 40s linear infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .stars, .stars-2, .fade-up { animation: none; }
+  .stars, .stars-2, .fade-up, .animate-spin-slow { animation: none; }
 }

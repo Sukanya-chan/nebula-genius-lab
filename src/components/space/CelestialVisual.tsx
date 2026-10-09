@@ -21,7 +21,7 @@ export function CelestialVisual({
 
   if (kind === "star") {
     return (
-      <svg viewBox="0 0 200 200" width={size} height={size} className="mx-auto">
+      <svg viewBox="0 0 200 200" width={size} height={size} className="mx-auto h-auto max-w-full">
         <defs>
           <radialGradient id={`g${id}`}>
             <stop offset="0%" stopColor="#fff" />
@@ -43,7 +43,7 @@ export function CelestialVisual({
   }
 
   return (
-    <svg viewBox="0 0 200 200" width={size} height={size} className="mx-auto overflow-visible">
+    <svg viewBox="0 0 200 200" width={size} height={size} className="mx-auto h-auto max-w-full">
       <defs>
         <radialGradient id={`p${id}`} cx="35%" cy="35%">
           <stop offset="0%" stopColor={c3} />
