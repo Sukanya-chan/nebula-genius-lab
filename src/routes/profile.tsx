@@ -12,6 +12,8 @@ import { CelestialVisual } from "@/components/space/CelestialVisual";
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Mission Log — HackTheSpace" },
       { name: "description", content: "Your saved worlds, challenge history and quiz scores." },
       { property: "og:title", content: "Mission Log — HackTheSpace" },
@@ -33,15 +35,16 @@ function Profile() {
     queryKey: ["log", user?.id],
     enabled: !!user,
     queryFn: async () => {
+      if (!user) throw new Error("Sign in to view your mission log.");
       const [p, o, c, s] = await Promise.all([
-        supabase.from("profiles").select("display_name").eq("id", user!.id).maybeSingle(),
+        supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
         supabase.from("generated_objects").select("id, kind, name, data, created_at").order("created_at", { ascending: false }).limit(50),
         supabase.from("challenge_results").select("id, topic, difficulty, correct, points, created_at").order("created_at", { ascending: false }).limit(200),
         supabase.from("quiz_scores").select("id, difficulty, score, total, created_at").order("created_at", { ascending: false }).limit(50),
       ]);
-      const err = o.error || c.error || s.error;
+      const err = p.error || o.error || c.error || s.error;
       if (err) throw err;
-      return { name: p.data?.display_name ?? user!.email, objects: o.data!, challenges: c.data!, quizzes: s.data! };
+      return { name: p.data?.display_name ?? user.email, objects: o.data ?? [], challenges: c.data ?? [], quizzes: s.data ?? [] };
     },
   });
 
@@ -52,7 +55,8 @@ function Profile() {
 
   if (q.isLoading) return <Scanning label="Loading mission log" />;
   if (q.error) return <ErrorPanel message={(q.error as Error).message} onRetry={() => q.refetch()} />;
-  const d = q.data!;
+  const d = q.data;
+  if (!d) return <Scanning label="Loading mission log" />;
   const pts = d.challenges.reduce((a, r) => a + r.points, 0);
   const acc = d.challenges.length ? Math.round((d.challenges.filter((r) => r.correct).length / d.challenges.length) * 100) : 0;
   const best = d.quizzes.reduce((b, r) => Math.max(b, Math.round((r.score / r.total) * 100)), 0);
@@ -90,9 +94,9 @@ function Profile() {
           <h2 className="mb-4 text-xl font-semibold">Recent challenges</h2>
           <GlassCard className="divide-y divide-border p-0 sm:p-0">
             {d.challenges.length === 0 ? <p className="p-5 text-sm text-muted-foreground">No challenges attempted yet.</p> : d.challenges.slice(0, 10).map((r) => (
-              <div key={r.id} className="flex items-center justify-between px-5 py-3 text-sm">
+              <div key={r.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
                 <span><span className={r.correct ? "text-success" : "text-destructive"}>●</span> {r.topic} <span className="text-muted-foreground">· {r.difficulty}</span></span>
-                <span className="font-mono text-xs">+{r.points}</span>
+                <span className="shrink-0 font-mono text-xs">+{r.points}</span>
               </div>
             ))}
           </GlassCard>

@@ -3,6 +3,7 @@ import { useState, type ReactNode } from "react";
 import { Atom, Bot, Compass, Menu, Orbit, Rocket, Telescope, Trophy, User, X, BrainCircuit } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import { GhostButton } from "@/components/space/common";
 
 export const NAV = [
   { to: "/challenges", label: "Challenges", icon: Trophy },
@@ -63,17 +64,19 @@ export function AppShell({ children }: { children: ReactNode }) {
               <User className="size-4 text-accent" />
               <span className="hidden sm:inline">{user ? "Mission log" : "Sign in"}</span>
             </Link>
-            <button
-              aria-label="Open menu"
+             <GhostButton
+               aria-label={open ? "Close menu" : "Open menu"}
+               aria-expanded={open}
+               aria-controls="mobile-navigation"
               className="rounded-lg border border-border p-2 lg:hidden"
               onClick={() => setOpen((v) => !v)}
             >
               {open ? <X className="size-4" /> : <Menu className="size-4" />}
-            </button>
+             </GhostButton>
           </div>
         </div>
         {open && (
-          <nav className="grid grid-cols-2 gap-2 border-t border-border/60 p-4 lg:hidden">
+           <nav id="mobile-navigation" className="grid grid-cols-2 gap-2 border-t border-border/60 p-4 lg:hidden">
             {NAV.map((n) => (
               <Link
                 key={n.to}
@@ -92,7 +95,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       </header>
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">{children}</main>
-      <footer className="mx-auto flex max-w-7xl items-center justify-between gap-4 border-t border-border/60 px-4 py-6 text-xs text-muted-foreground sm:px-6">
+       <footer className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 border-t border-border/60 px-4 py-6 text-xs text-muted-foreground sm:px-6">
         <span className="flex items-center gap-2"><Compass className="size-3.5" /> HackTheSpace mission control</span>
         <span className="label-mono">Powered by Gemini</span>
       </footer>
@@ -104,7 +107,7 @@ export function PageHeader({ eyebrow, title, subtitle }: { eyebrow: string; titl
   return (
     <div className="fade-up mb-8">
       <p className="label-mono mb-3 text-accent">{eyebrow}</p>
-      <h1 className="text-3xl font-semibold sm:text-4xl">{title}</h1>
+       <h1 className="break-words text-3xl font-semibold sm:text-4xl">{title}</h1>
       {subtitle && <p className="mt-3 max-w-2xl text-muted-foreground">{subtitle}</p>}
     </div>
   );

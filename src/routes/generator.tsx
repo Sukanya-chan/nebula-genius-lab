@@ -15,6 +15,8 @@ import { Slider } from "@/components/ui/slider";
 export const Route = createFileRoute("/generator")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Planet & Star Generator — HackTheSpace" },
       { name: "description", content: "Generate scientifically plausible planets and stars with Gemini from your own parameters." },
       { property: "og:title", content: "Planet & Star Generator — HackTheSpace" },
@@ -107,7 +109,7 @@ function Generator() {
             <div><CelestialVisual kind={kind} palette={kind === "star" ? ["#3b1d6e", "#6d5bd6", "#c7f0ff"] : ["#141a3a", "#3a4a8a", "#6fa8d6"]} size={180} seed="empty" /><p className="mt-4">Set parameters and generate a new {kind}.</p></div>
           </div>
         ) : (
-          <div className="fade-up grid gap-6 md:grid-cols-[260px_1fr]">
+          <div className="fade-up grid min-w-0 gap-6 xl:grid-cols-[240px_minmax(0,1fr)]">
             <div>
               <CelestialVisual kind={result.kind} palette={result.palette} hasRings={result.hasRings} size={240} seed={result.name} />
               <div className="mt-4 flex gap-2">
@@ -120,7 +122,7 @@ function Generator() {
                 </div>
               )}
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="label-mono text-accent">{result.classification}</p>
               <h2 className="mt-2 text-2xl font-semibold">{result.name}</h2>
               <p className="mt-1 text-sm italic text-muted-foreground">{result.tagline}</p>

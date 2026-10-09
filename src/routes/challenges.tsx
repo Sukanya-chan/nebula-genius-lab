@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/challenges")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "AI Space Challenges — HackTheSpace" },
       { name: "description", content: "Gemini-generated astronomy missions with difficulty levels, hints, scoring and progress tracking." },
       { property: "og:title", content: "AI Space Challenges — HackTheSpace" },

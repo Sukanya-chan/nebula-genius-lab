@@ -9,6 +9,8 @@ import { Slider } from "@/components/ui/slider";
 export const Route = createFileRoute("/simulator")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "What-If Orbital Simulator — HackTheSpace" },
       { name: "description", content: "Adjust star mass, orbital distance and velocity to see real Newtonian orbits, periods and escape velocities." },
       { property: "og:title", content: "What-If Orbital Simulator — HackTheSpace" },
@@ -36,6 +38,8 @@ function Simulator() {
   const [speed, setSpeed] = useState(1);
   const [resetKey, setResetKey] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const playbackRef = useRef({ running, speed });
+  useEffect(() => { playbackRef.current = { running, speed }; }, [running, speed]);
 
   const stats = useMemo(() => analyzeOrbit(mSol * M_SUN, rAU * AU, vKms * 1000), [mSol, rAU, vKms]);
 
@@ -47,6 +51,7 @@ function Simulator() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const resize = () => {
       const w = canvas.clientWidth;
+      if (w <= 0) return;
       canvas.width = w * dpr; canvas.height = w * 0.75 * dpr;
     };
     resize();
@@ -76,7 +81,9 @@ function Simulator() {
       ctx.lineWidth = 1.6 * dpr;
       for (let i = 1; i < trail.length; i++) {
         ctx.strokeStyle = `rgba(110,220,255,${(i / trail.length) * 0.8})`;
-        ctx.beginPath(); ctx.moveTo(cx + trail[i - 1]![0] * scale, cy - trail[i - 1]![1] * scale); ctx.lineTo(cx + trail[i]![0] * scale, cy - trail[i]![1] * scale); ctx.stroke();
+        const previous = trail[i - 1], current = trail[i];
+        if (!previous || !current) continue;
+        ctx.beginPath(); ctx.moveTo(cx + previous[0] * scale, cy - previous[1] * scale); ctx.lineTo(cx + current[0] * scale, cy - current[1] * scale); ctx.stroke();
       }
       // body
       ctx.fillStyle = crashed ? "rgba(255,90,90,1)" : "rgba(170,140,255,1)";
@@ -87,8 +94,8 @@ function Simulator() {
 
     const step = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
-      if (running && !crashed) {
-        const simTime = dt * speed * 20 * daySec * Math.max(0.2, rAU ** 1.5 / Math.sqrt(mSol));
+      if (playbackRef.current.running && !crashed) {
+        const simTime = dt * playbackRef.current.speed * 20 * daySec * Math.max(0.2, rAU ** 1.5 / Math.sqrt(mSol));
         const n = 200; const h = simTime / n;
         for (let i = 0; i < n; i++) {
           // velocity Verlet
@@ -108,7 +115,7 @@ function Simulator() {
     };
     raf = requestAnimationFrame(step);
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
-  }, [mSol, rAU, vKms, running, speed, resetKey, stats.apoapsis]);
+  }, [mSol, rAU, vKms, resetKey, stats.apoapsis]);
 
   return (
     <div>
