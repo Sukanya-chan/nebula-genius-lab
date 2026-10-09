@@ -1,14 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
 import { CATALOG_TYPES, searchCatalog, type CatalogEntry, type CatalogType } from "@/lib/catalog";
 import { PageHeader } from "@/components/space/AppShell";
-import { Chip, GlassCard } from "@/components/space/common";
+import { Chip, GhostButton, GlassCard } from "@/components/space/common";
 import { CelestialVisual } from "@/components/space/CelestialVisual";
 
 export const Route = createFileRoute("/explorer")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Space Explorer Catalog — HackTheSpace" },
       { name: "description", content: "Search planets, stars, moons, galaxies, nebulae and black holes with key scientific facts." },
       { property: "og:title", content: "Space Explorer Catalog — HackTheSpace" },
@@ -37,12 +39,20 @@ function Explorer() {
   const [type, setType] = useState<CatalogType | "all">("all");
   const [sel, setSel] = useState<CatalogEntry | null>(null);
   const results = useMemo(() => searchCatalog(q, type), [q, type]);
+  useEffect(() => {
+    if (!sel) return;
+    const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") setSel(null); };
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKey);
+    return () => { document.body.style.overflow = overflow; document.removeEventListener("keydown", handleKey); };
+  }, [sel]);
 
   return (
     <div>
       <PageHeader eyebrow="Module 03 · Catalog" title="Space Explorer" subtitle="Real objects, real data. Search by name, property or fact." />
       <div className="glass mb-6 flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
+        <div className="relative min-w-0 flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search Saturn, red dwarf, methane…" className="w-full rounded-xl border border-input bg-secondary/60 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-ring" />
         </div>
@@ -69,15 +79,15 @@ function Explorer() {
 
       {sel && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 p-4 backdrop-blur-sm" onClick={() => setSel(null)}>
-          <div className="glass fade-up max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" aria-labelledby="catalog-object-title" className="glass fade-up max-h-[90dvh] w-full max-w-2xl overflow-y-auto break-words p-5 sm:p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between">
               <p className="label-mono text-accent">{sel.type} · {sel.distance}</p>
-              <button aria-label="Close" onClick={() => setSel(null)}><X className="size-5" /></button>
+               <GhostButton autoFocus aria-label="Close" onClick={() => setSel(null)} className="size-8 shrink-0 border-0 bg-transparent p-0"><X className="size-5" /></GhostButton>
             </div>
             <div className="mt-4 grid gap-6 sm:grid-cols-[200px_1fr]">
               <Visual e={sel} size={200} />
               <div>
-                <h2 className="text-2xl font-semibold">{sel.name}</h2>
+                <h2 id="catalog-object-title" className="text-2xl font-semibold">{sel.name}</h2>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{sel.summary}</p>
               </div>
             </div>

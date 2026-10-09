@@ -6,6 +6,8 @@ import { CelestialVisual } from "@/components/space/CelestialVisual";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "HackTheSpace — Explore the cosmos with AI" },
       { name: "description", content: "AI-generated space challenges, planet & star generator, orbital simulator, catalog and astronomy assistant." },
       { property: "og:title", content: "HackTheSpace — Explore the cosmos with AI" },
@@ -45,7 +47,7 @@ function Home() {
             </Link>
           </div>
         </div>
-        <div className="relative mx-auto aspect-square w-full max-w-md">
+        <div className="relative mx-auto aspect-square w-full max-w-md overflow-hidden">
           <div className="absolute inset-0 animate-spin-slow rounded-full border border-dashed border-primary/25" />
           <div className="absolute inset-10 rounded-full border border-accent/15" />
           <div className="absolute inset-0 grid place-items-center">
